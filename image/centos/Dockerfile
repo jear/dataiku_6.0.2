@@ -1,4 +1,5 @@
-FROM centos:7
+#FROM centos:7
+FROM bluedata/centos7:latest
 
 # ARG dssVersion
 ENV dssVersion=6.0.2
@@ -66,3 +67,11 @@ COPY run.sh /home/dataiku/
 EXPOSE $DSS_PORT
 
 CMD [ "/home/dataiku/run.sh" ]
+
+
+USER bluedata
+WORKDIR /home/bluedata
+
+COPY run.sh /home/bluedata/
+
+
