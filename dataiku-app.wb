@@ -66,7 +66,7 @@ appconfig autogen --new --configapi 7
 ############################
 
 #appconfig autogen --pkgfile  dss start_dss.sh  --destdir /etc/init.d/
-#appconfig autogen --pkgfile dss.service --destdir /etc/systemd/system/
+appconfig autogen --pkgfile dss.service --destdir /etc/systemd/system/
 
 ################# Package app catalog in a tgz ##########################
 # This section generates app configuration bundle (appconfig.tgz)        #

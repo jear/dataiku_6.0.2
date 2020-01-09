@@ -1,1 +1,2 @@
-# dataiku_6.0.2
+# Dataiku_6.0.2
+

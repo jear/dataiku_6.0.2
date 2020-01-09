@@ -3,8 +3,8 @@ Description=DSS service
 
 [Service]
 Type=forking
-User=dataiku
-ExecStart=/home/dataiku/dss/bin/dss start
+User=bluedata
+ExecStart=/home/bluedata/data/bin/dss start
 
 [Install]
 WantedBy=multi-user.target

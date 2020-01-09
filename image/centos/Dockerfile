@@ -1,77 +1,47 @@
-#FROM centos:7
 FROM bluedata/centos7:latest
+ENV port 10000 
+ENV user bluedata 
+ENV version 6.0.2
+ENV data_dir /home/$user/data 
 
-# ARG dssVersion
-ENV dssVersion=6.0.2
+#RUN yum install -y http://download.fedoraproject.org//pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum -y install epel-release
+RUN yum -y install https://centos7.iuscommunity.org/ius-release.rpm
 
-ENV DSS_VERSION="$dssVersion" \
-    DSS_DATADIR="/home/dataiku/dss" \
-    DSS_PORT=10000
+RUN yum -y install sudo \
+        yum -y install wget \
+        yum -y install git \
+        yum -y install zip \
+        yum -y install unzip \
+        yum -y install java-1.8.0-openjdk \
+        yum -y install epel-release \
+        yum -y install nginx \
+        yum -y install freetype \
+        yum -y install libgfortran \
+        yum -y install libgomp \
+        yum -y install python27 \
+        yum -y install python27-devel \
+        yum -y install python-devel \
+        yum -y install python36u \
+        yum -y install python36u-pip \
+        yum -y install python36u-libs \
+        yum -y install python36u-devel 
+        
 
-# Dataiku account and data dir setup
-RUN useradd dataiku \
-    && mkdir -p /home/dataiku ${DSS_DATADIR} \
-    && chown -Rh dataiku:dataiku /home/dataiku ${DSS_DATADIR}
+USER $user
+WORKDIR /home/$user
 
-# System dependencies
-RUN yum install -y \
-        epel-release \
-    && yum install -y \
-        file \
-        zeromq-devel \
-        acl \
-        expat \
-        git \
-        nginx \
-        unzip \
-        zip \
-        java-1.8.0-openjdk \
-        python3 \
-        freetype \
-        libgfortran \
-        libgomp \
-        R-core-devel \
-        libicu-devel \
-        libcurl-devel \
-        openssl-devel \
-        libxml2-devel \
-        python-devel \
-        python3-devel \
-    && yum clean all
+# Download DSS, untar distribution and remove tar.gz file
+RUN wget -q https://cdn.downloads.dataiku.com/public/dss/${version}/dataiku-dss-${version}.tar.gz
+RUN tar xzf dataiku-dss-${version}.tar.gz
+RUN rm -rf $version
 
-# Download and extract DSS kit
-RUN DSSKIT="dataiku-dss-$DSS_VERSION" \
-    && cd /home/dataiku \
-    && echo "+ Downloading kit" \
-    && curl -OsS "https://cdn.downloads.dataiku.com/public/studio/$DSS_VERSION/$DSSKIT.tar.gz" \
-    && echo "+ Extracting kit" \
-    && tar xf "$DSSKIT.tar.gz" \
-    && rm "$DSSKIT.tar.gz" \
-    && "$DSSKIT"/scripts/install/installdir-postinstall.sh "$DSSKIT" \
-    && chown -Rh dataiku:dataiku "$DSSKIT"
+# run DSS installer
+RUN  dataiku-dss-${version}/installer.sh -d $data_dir -p $port
 
-# Install required R packages
-RUN mkdir -p /usr/local/lib/R/site-library \
-    && R --slave --no-restore \
-        -e "install.packages( \
-            c('httr', 'RJSONIO', 'dplyr', 'curl', 'IRkernel', 'sparklyr', 'ggplot2', 'gtools', 'tidyr', 'rmarkdown', 'base64enc'), \
-            '/usr/local/lib/R/site-library', \
-            repos='https://cloud.r-project.org')"
+COPY ./dbPlugin.tar.gz .
+RUN mkdir /home/$user/dataiku-dss-${version}/resources/plugins/dev
+RUN tar xzvf ./dbPlugin.tar.gz -C /home/$user/dataiku-dss-${version}/resources/plugins/dev
 
-# Entry point
-WORKDIR /home/dataiku
-USER dataiku
-
-COPY run.sh /home/dataiku/
-
-EXPOSE $DSS_PORT
-
-CMD [ "/home/dataiku/run.sh" ]
-
-
-USER bluedata
-WORKDIR /home/bluedata
-
-COPY run.sh /home/bluedata/
-
-
+USER root
+ 
